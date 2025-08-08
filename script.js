@@ -1,34 +1,111 @@
-// Fetch and process wine data
-fetch('https://storage.googleapis.com/squarewine-card/wine_list.json')
-    .then(response => response.json())
-    .then(data => {
-        processWineData(data);
+document.addEventListener('DOMContentLoaded', function() {
+    const wineContainer = document.getElementById('wine-sections');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const navbar = document.querySelector('.navbar');
 
-        // Add event listeners to filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const filter = this.getAttribute('data-filter');
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
+    // Show spinner
+    loadingSpinner.style.display = 'block';
+    wineContainer.style.display = 'none';
 
-                document.querySelectorAll('.section').forEach(section => {
-                    section.style.display = (filter === 'all' || section.getAttribute('data-style') === filter) ? 'block' : 'none';
+    // Fetch and process wine data
+    fetch('https://storage.googleapis.com/squarewine-card/wine_list.json?v=4')
+        .then(response => response.json())
+        .then(data => {
+            // Hide spinner and show content
+            loadingSpinner.style.display = 'none';
+            wineContainer.style.display = 'block';
+
+            const styleOrder = ['Bier', 'Bubbels', 'Wit','Rose', 'Rood', 'Dessert'];
+            styleOrder.forEach(style => {
+                const link = document.createElement('a');
+                link.href = `#${style}`;
+                link.textContent = style;
+                navbar.appendChild(link);
+            });
+
+            processWineData(data);
+
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('.navbar a').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
                 });
             });
+        })
+        .catch(error => {
+            console.error('Error fetching wine data:', error);
+            // Hide spinner and show error
+            loadingSpinner.style.display = 'none';
+            wineContainer.style.display = 'block';
+            wineContainer.innerHTML = `
+                <div class="error-message">
+                    <h2>Error Loading Wine Data</h2>
+                    <p>Sorry, we couldn't load the wine list. Please try again later.</p>
+                </div>
+            `;
         });
-    })
-    .catch(error => {
-        console.error('Error fetching wine data:', error);
-        document.getElementById('wine-sections').innerHTML = `
-            <div class="error-message">
-                <h2>Error Loading Wine Data</h2>
-                <p>Sorry, we couldn't load the wine list. Please try again later.</p>
-            </div>
-        `;
+});
+
+function populateFilters(wines) {
+    const colorFilters = document.getElementById('color-filters');
+    const countryFilters = document.getElementById('country-filters');
+    const varietalFilters = document.getElementById('varietal-filters');
+
+    const colors = [...new Set(wines.map(wine => wine.Style))];
+    const countries = [...new Set(wines.map(wine => wine.Country))];
+    const varietals = [...new Set(wines.map(wine => wine.Varietal))];
+
+    createFilterButtons(colorFilters, colors, 'color');
+    createFilterButtons(countryFilters, countries, 'country');
+    createFilterButtons(varietalFilters, varietals, 'varietal');
+}
+
+function createFilterButtons(container, items, filterType) {
+    items.sort().forEach(item => {
+        const button = document.createElement('button');
+        button.className = 'filter-btn';
+        button.setAttribute('data-filter', item);
+        button.textContent = item;
+        container.appendChild(button);
     });
+}
+
+function applyFilters() {
+    const activeColorFilters = getActiveFilters('color-filters');
+    const activeCountryFilters = getActiveFilters('country-filters');
+    const activeVarietalFilters = getActiveFilters('varietal-filters');
+
+    document.querySelectorAll('.wine-text').forEach(wine => {
+        const style = wine.getAttribute('data-style');
+        const country = wine.getAttribute('data-country');
+        const varietal = wine.getAttribute('data-varietal');
+
+        const colorMatch = activeColorFilters.length === 0 || activeColorFilters.includes(style);
+        const countryMatch = activeCountryFilters.length === 0 || activeCountryFilters.includes(country);
+        const varietalMatch = activeVarietalFilters.length === 0 || activeVarietalFilters.includes(varietal);
+
+        if (colorMatch && countryMatch && varietalMatch) {
+            wine.style.display = 'block';
+        } else {
+            wine.style.display = 'none';
+        }
+    });
+}
+
+function getActiveFilters(containerId) {
+    const activeFilters = [];
+    document.querySelectorAll(`#${containerId} .filter-btn.active`).forEach(btn => {
+        activeFilters.push(btn.getAttribute('data-filter'));
+    });
+    return activeFilters;
+}
 
 function processWineData(wines) {
-    const styleOrder = ['Bier', 'Bubbels', 'Wit', 'Rood', 'Dessert'];
+    const styleOrder = ['Bier', 'Bubbels', 'Wit','Rose', 'Rood', 'Dessert'];
     const winesByStyle = {};
     styleOrder.forEach(style => winesByStyle[style] = []);
 
@@ -47,6 +124,7 @@ function processWineData(wines) {
 
             const section = document.createElement('div');
             section.className = 'section';
+            section.id = style;
             section.setAttribute('data-style', style);
             section.innerHTML = `<h2 class="section-title">${style}</h2>`;
 
@@ -79,6 +157,10 @@ function processWineData(wines) {
     });
 }
 
+/**
+ * UPDATED FUNCTION
+ * This function now checks for a wine.Description and adds it below the details.
+ */
 function createWineText(wine) {
     const wineText = document.createElement('div');
     wineText.className = 'wine-text';
@@ -86,9 +168,16 @@ function createWineText(wine) {
     let titleLine = `${wine.Producer} | ${wine.Name}`;
     let details = [wine.Year, wine.Region, wine.Varietal].filter(Boolean).join(' | ');
 
+    // Conditionally create the description row if wine.Description is not null or empty.
+    // It uses the 'wine-details' class as requested for consistent styling.
+    let descriptionLine = (wine.Description && wine.Description.trim() !== "")
+        ? `<div class="wine-description">${wine.Description}</div>`
+        : '';
+
     wineText.innerHTML = `
         <div class="wine-title">${titleLine}</div>
         ${details ? `<div class="wine-details">${details}</div>` : ''}
+        ${descriptionLine}
     `;
 
     return wineText;

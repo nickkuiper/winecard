@@ -9,6 +9,25 @@
     font-family: 'Raleway';
 }
 
+#loading-spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #972A0B;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 body {
     background-color: #fff;
     color: #972A0B;
@@ -43,6 +62,19 @@ body {
     margin-bottom: 40px;
 }
 
+.navbar {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: #972A0B;
+    font-size: 18px;
+    margin: 0 15px;
+    font-weight: 600;
+}
+
 .logo {
     font-size: 28px;
     font-weight: 300;
@@ -70,7 +102,7 @@ body {
     font-family: 'Playfair Display';
     font-weight: 400;
     margin-bottom: 40px;
-    padding-bottom: 10px;
+    padding-bottom: 20px;
     margin-top: 100px;
     letter-spacing: 3px;
 }
@@ -82,24 +114,39 @@ body {
 
 .wine-text {
     display: block;
-    margin-bottom: 15px;
+    margin-bottom: 25px;
 }
 
 .wine-title {
     font-size: 18px;
-    font-weight: 400;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .wine-details {
     font-size: 14px;
+    font-weight: 400;
+    line-height: 1.8;
+}
+
+.wine-description {
+    font-size: 14px;
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.8;
+}
+
+.wine-description {
+    font-size: 14px;
     font-weight: 300;
+    font-style: italic;
 }
 
 .country-divider {
     font-size: 22px;
     font-weight: 700;
     font-family: 'Raleway';
-    margin: 15px 0 10px;
+    margin: 40px 0 10px;
     padding-bottom: 5px;
 }
 
@@ -122,9 +169,9 @@ body {
 }
 
 .filter-btn:hover, .filter-btn.active {
-    background-color: #7b1113;
+    background-color: #A72C2C;
     color: white;
-    border-color: #7b1113;
+    border-color: #A72C2C;
 }
 
 /* Media Queries */

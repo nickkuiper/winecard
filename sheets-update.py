@@ -6,6 +6,7 @@ sheet = 'Wine celler'
 tab = 'Amersfoort'
 
 df = gc.get_spreadsheet(sheet, tab)
+df = [x for x in df if x['In_Stock'] == 'TRUE']
 
 #to gc
 
